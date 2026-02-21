@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+
+# build
+dist/
+build/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+
+# env
+.env
+.env.local
+
+# vscode opcional
+.vscode/*
+!.vscode/settings.json
