@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Quick Tap",
+  "version": "0.1.0",
+  "description": "A fast idle clicker game for Chrome.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "assets/icons/games16.png",
+      "48": "assets/icons/games48.png",
+      "128": "assets/icons/games128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icons/games16.png",
+    "48": "assets/icons/games48.png",
+    "128": "assets/icons/games128.png"
+  },
+  "permissions": ["storage"]
+}

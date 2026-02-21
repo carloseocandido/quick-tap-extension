@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -p tsconfig.json"
+    "build": "esbuild src/popup.ts --bundle --format=iife --outfile=dist/popup.js",
+    "watch": "esbuild src/popup.ts --bundle --format=iife --outfile=dist/popup.js --watch",
+    "lint": "eslint .",
+    "format": "prettier . --write"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +17,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/chrome": "^0.1.37",
+    "esbuild": "^0.27.3",
     "eslint": "^10.0.1",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.1",
