@@ -1,5 +1,5 @@
 {
-  "manifest_version": 4,
+  "manifest_version": 3,
   "name": "Quick Tap",
   "version": "1.0.0",
   "description": "A fast idle clicker game for Chrome.",
