@@ -14,8 +14,42 @@ export const DEFAULT_STATE: GameState = {
   language: 'en',
 };
 
+type ExtensionStorageAPI = {
+  storage: {
+    local: {
+      get(items: Record<string, unknown>): Promise<Record<string, unknown>>;
+      set(items: Record<string, unknown>): Promise<void>;
+    };
+  };
+};
+
+function getExtensionAPI(): ExtensionStorageAPI {
+  const api =
+    (
+      globalThis as typeof globalThis & {
+        browser?: ExtensionStorageAPI;
+        chrome?: ExtensionStorageAPI;
+      }
+    ).browser ??
+    (
+      globalThis as typeof globalThis & {
+        browser?: ExtensionStorageAPI;
+        chrome?: ExtensionStorageAPI;
+      }
+    ).chrome;
+
+  if (!api) {
+    throw new Error('Browser extension API is not available.');
+  }
+
+  return api;
+}
+
 export async function loadState(): Promise<GameState> {
-  const data = (await chrome.storage.local.get(DEFAULT_STATE)) as Partial<GameState>;
+  const extensionAPI = getExtensionAPI();
+  const data = (await extensionAPI.storage.local.get(
+    DEFAULT_STATE as Record<string, unknown>,
+  )) as Partial<GameState>;
 
   return {
     points: data.points ?? DEFAULT_STATE.points,
@@ -26,5 +60,6 @@ export async function loadState(): Promise<GameState> {
 }
 
 export async function saveState(state: GameState): Promise<void> {
-  await chrome.storage.local.set(state);
+  const extensionAPI = getExtensionAPI();
+  await extensionAPI.storage.local.set(state as Record<string, unknown>);
 }

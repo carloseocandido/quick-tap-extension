@@ -2,7 +2,13 @@
   "manifest_version": 3,
   "name": "Quick Tap",
   "version": "1.0.0",
-  "description": "A fast idle clicker game for Chrome.",
+  "description": "A fast idle clicker game for Chrome and Firefox.",
+  "browser_specific_settings": {
+    "firefox": {
+      "id": "quick-tap-extension@carloseocandido.github.io",
+      "strict_min_version": "109.0"
+    }
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

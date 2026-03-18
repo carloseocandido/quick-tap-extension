@@ -6,6 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "esbuild src/popup.ts --bundle --format=iife --outfile=dist/popup.js",
+    "build:package": "npm run package:zip",
+    "package:zip": "esbuild scripts/package.ts --bundle --platform=node --format=esm --target=node16 --outfile=.tmp/package.mjs && node .tmp/package.mjs",
     "watch": "esbuild src/popup.ts --bundle --format=iife --outfile=dist/popup.js --watch",
     "lint": "eslint .",
     "format": "prettier . --write"
@@ -17,6 +19,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/chrome": "^0.1.37",
+    "@types/node": "^25.5.0",
     "esbuild": "^0.27.3",
     "eslint": "^10.0.1",
     "eslint-config-prettier": "^10.1.8",
