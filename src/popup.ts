@@ -19,6 +19,15 @@ const languageSelect = mustGetById<HTMLSelectElement>('language');
 let state: GameState = DEFAULT_STATE;
 let i18n: Translations = getTranslations('en');
 
+function setAutoTapLabel(el: HTMLElement): void {
+  const autoTapNoun = state.language === 'pt-br' ? 'Toque' : 'Tap';
+  el.textContent = '';
+
+  const strong = document.createElement('strong');
+  strong.textContent = 'Auto';
+  el.append(strong, ` ${autoTapNoun} (+1/s)`);
+}
+
 function updateTranslations(): void {
   i18n = getTranslations(state.language);
 
@@ -29,10 +38,9 @@ function updateTranslations(): void {
 
     const translation = i18n[key as keyof Translations];
     if (el.tagName === 'BUTTON' || el.tagName === 'SPAN') {
-      // For autoTap, preserve the HTML structure
+      // Keep the emphasized "Auto" label without using dynamic HTML.
       if (key === 'autoTap') {
-        el.innerHTML =
-          '<strong>Auto</strong> ' + (state.language === 'pt-br' ? 'Toque' : 'Tap') + ' (+1/s)';
+        setAutoTapLabel(el);
       } else {
         el.textContent = translation;
       }

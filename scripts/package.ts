@@ -1,5 +1,14 @@
 import { execSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import path from 'node:path';
 
 type Manifest = {
@@ -96,6 +105,23 @@ function stageCommonFiles(stageDir: string): void {
     const targetPath = path.join(stageDir, item);
     cpSync(sourcePath, targetPath, { recursive: true });
   }
+
+  removeMacOsMetadataFiles(stageDir);
+}
+
+function removeMacOsMetadataFiles(dirPath: string): void {
+  for (const entry of readdirSync(dirPath, { withFileTypes: true })) {
+    const fullPath = path.join(dirPath, entry.name);
+
+    if (entry.isDirectory()) {
+      removeMacOsMetadataFiles(fullPath);
+      continue;
+    }
+
+    if (entry.name === '.DS_Store') {
+      unlinkSync(fullPath);
+    }
+  }
 }
 
 function writeManifest(stageDir: string, manifest: Manifest): void {
@@ -141,6 +167,17 @@ function expectVersionString(value: unknown, field: string, context: ValidationC
   }
 
   return version;
+}
+
+function getMajorVersion(version: string): number {
+  const majorPart = version.split('.')[0];
+  const major = Number.parseInt(majorPart, 10);
+
+  if (Number.isNaN(major)) {
+    fail(`Nao foi possivel interpretar a versao: ${version}`);
+  }
+
+  return major;
 }
 
 function expectArrayOfStrings(value: unknown, field: string, context: ValidationContext): string[] {
@@ -215,28 +252,85 @@ function validateFirefoxManifest(manifest: Manifest): void {
   if (!isObject(manifest.browser_specific_settings)) {
     failValidation(
       VALIDATION_CONTEXT.FIREFOX,
-      "Pacote Firefox requer 'browser_specific_settings.firefox' no manifest.",
+      "Pacote Firefox requer 'browser_specific_settings.gecko' no manifest.",
     );
   }
 
-  const firefoxSettings = manifest.browser_specific_settings.firefox;
-  if (!isObject(firefoxSettings)) {
+  const geckoSettings = manifest.browser_specific_settings.gecko;
+  if (!isObject(geckoSettings)) {
     failValidation(
       VALIDATION_CONTEXT.FIREFOX,
-      "Pacote Firefox requer objeto 'browser_specific_settings.firefox' no manifest.",
+      "Pacote Firefox requer objeto 'browser_specific_settings.gecko' no manifest.",
+    );
+  }
+
+  const dataCollectionPermissions = geckoSettings.data_collection_permissions;
+  if (!isObject(dataCollectionPermissions)) {
+    failValidation(
+      VALIDATION_CONTEXT.FIREFOX,
+      "Pacote Firefox requer 'browser_specific_settings.gecko.data_collection_permissions'.",
+    );
+  }
+
+  const requiredDataPermissions = expectArrayOfStrings(
+    dataCollectionPermissions.required,
+    'browser_specific_settings.gecko.data_collection_permissions.required',
+    VALIDATION_CONTEXT.FIREFOX,
+  );
+
+  if (requiredDataPermissions.length === 0) {
+    failValidation(
+      VALIDATION_CONTEXT.FIREFOX,
+      "Campo 'browser_specific_settings.gecko.data_collection_permissions.required' nao pode ser vazio.",
+    );
+  }
+
+  if (!requiredDataPermissions.includes('none')) {
+    failValidation(
+      VALIDATION_CONTEXT.FIREFOX,
+      'Para este projeto sem coleta/transmissao, use \'required: ["none"]\' em data_collection_permissions.',
     );
   }
 
   expectNonEmptyString(
-    firefoxSettings.id,
-    'browser_specific_settings.firefox.id',
+    geckoSettings.id,
+    'browser_specific_settings.gecko.id',
     VALIDATION_CONTEXT.FIREFOX,
   );
-  expectVersionString(
-    firefoxSettings.strict_min_version,
-    'browser_specific_settings.firefox.strict_min_version',
+
+  const geckoMinVersion = expectVersionString(
+    geckoSettings.strict_min_version,
+    'browser_specific_settings.gecko.strict_min_version',
     VALIDATION_CONTEXT.FIREFOX,
   );
+
+  if (getMajorVersion(geckoMinVersion) < 140) {
+    failValidation(
+      VALIDATION_CONTEXT.FIREFOX,
+      "Com 'data_collection_permissions', use gecko.strict_min_version >= 140.0.",
+    );
+  }
+
+  const geckoAndroidSettings = manifest.browser_specific_settings.gecko_android;
+  if (!isObject(geckoAndroidSettings)) {
+    failValidation(
+      VALIDATION_CONTEXT.FIREFOX,
+      "Pacote Firefox requer 'browser_specific_settings.gecko_android.strict_min_version' >= 142.0.",
+    );
+  }
+
+  const geckoAndroidMinVersion = expectVersionString(
+    geckoAndroidSettings.strict_min_version,
+    'browser_specific_settings.gecko_android.strict_min_version',
+    VALIDATION_CONTEXT.FIREFOX,
+  );
+
+  if (getMajorVersion(geckoAndroidMinVersion) < 142) {
+    failValidation(
+      VALIDATION_CONTEXT.FIREFOX,
+      "Com 'data_collection_permissions', use gecko_android.strict_min_version >= 142.0.",
+    );
+  }
 }
 
 function validateChromeManifest(manifest: Manifest): void {
