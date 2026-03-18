@@ -1,5 +1,11 @@
 import { mustGetById } from './dom';
-import { getTranslations, isValidLanguage, type Language, type Translations } from './i18n';
+import {
+  detectBrowserLanguage,
+  getTranslations,
+  isValidLanguage,
+  type Language,
+  type Translations,
+} from './i18n';
 import { DEFAULT_STATE, loadState, saveState, type GameState } from './storage';
 
 const pointsEl = mustGetById<HTMLDivElement>('points');
@@ -90,6 +96,16 @@ function changeLanguage(lang: string): void {
 
 async function main(): Promise<void> {
   state = await loadState();
+
+  // Auto-detect browser language on first run (when language is still default)
+  if (state.language === DEFAULT_STATE.language) {
+    const detectedLanguage = detectBrowserLanguage();
+    if (detectedLanguage !== state.language) {
+      state = { ...state, language: detectedLanguage };
+      await saveState(state);
+    }
+  }
+
   updateTranslations();
   render();
 

@@ -83,3 +83,15 @@ export function getTranslations(lang: Language): Translations {
 export function isValidLanguage(lang: string): lang is Language {
   return lang === 'en' || lang === 'pt-br';
 }
+
+export function detectBrowserLanguage(): Language {
+  const browserLang = navigator.language.toLowerCase();
+
+  // Check if browser language contains 'pt' (Portuguese)
+  if (browserLang.startsWith('pt')) {
+    return 'pt-br';
+  }
+
+  // Default to English for any other language
+  return 'en';
+}
